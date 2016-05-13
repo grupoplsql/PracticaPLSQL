@@ -131,6 +131,17 @@ Operada ese día, Ruta sin billetes disponibles ese día, ruta inexistente.
 Nota: Se considera fundamental la división adecuada en subprogramas cuando resulte procedente y la correcta 
 legibilidad del código, así como la minimización del número de consultas realizadas al servidor.
 */
+CREATE or REPLACE FUNCTION ComprobarRuta (p_origen rutas.origen%type, p_destino rutas.destino%type)
+return NUMBER
+is
+    -- v_cantidad NUMBER;
+begin
+    return select count(*) as cantidad into v_cantidad
+    from rutas
+    where lower(origen) = lower(p_origen)
+    and lower(destino) = lower(p_destino);
+    -- return v_cantidad
+end ComprobarRuta;
 
 CREATE or REPLACE FUNCTION ConvertirFecha (p_fecha VARCHAR2)
 return DATE
@@ -167,7 +178,7 @@ end ConvertirFecha;
 CREATE OR REPLACE PROCEDURE MostrarRuta (p_origen rutas.origen%TYPE, p_destino rutas.destino%TYPE, p_fechasalida VARCHAR2)
 IS
    v_fechaformateada date;
-   CURSOR
+   CURSOR c_viajes
    IS
         SELECT  m.numeroasientos - v.numbilletesvendidos AS disponibles,
                 TO_CHAR(v.fechahorasalida, 'DD/MM/YYYY HH24:MI') AS salida,
@@ -184,8 +195,21 @@ IS
         AND     r.destino = p_destino
         AND     to_char(v.fechahorasalida,'D') = to_char(v_fechaformateada, 'D');
 BEGIN
-    v_fechaformateada := ConvertirFecha(p_fechasalida);
     
+    v_fechaformateada := ConvertirFecha(p_fechasalida);
+    for v_viajes in c_viajes LOOP
+        if c_viajes%FOUND then
+            if c_viajes%ROWCOUNT = 1 then
+                DBMS_OUTPUT.put_line('Cabecera');
+            end if;
+            DBMS_OUTPUT.put_line(   v_viajes.disponibles || ' ' ||
+                                    v_viajes.salida || ' ' || 
+                                    v_viajes.llegada || ' ' ||
+                                    v_viajes.precio_billete);
+        else
+            DBMS_OUTPUT.put_line('No hay viajes');
+        end if;
+    END LOOP;
 END MostrarRuta;
 /
 

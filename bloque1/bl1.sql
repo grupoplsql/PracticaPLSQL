@@ -158,22 +158,22 @@ RETURN NUMBER
 IS
     v_existe NUMBER;
     dsbl_peticionsql VARCHAR2(500);
-    v_prueba varchar2(20) := 'Madrid';
 
 BEGIN
 
-    dsbl_peticionsql := 'SELECT COUNT(' || p_tipo || ') ' ||
+    dsbl_peticionsql := 'SELECT COUNT(*) ' ||
                         'FROM rutas '      ||
-                        'WHERE ' || p_tipo || ' = :a
-                        or ' || p_tipo || ' = :b';
+                        'WHERE ' || p_tipo || ' = :a';
 
-/*  Algo guarro, pero funciona. El problem está en que no se como usar mas de una variable.
-    He visto que en bloques PL/SQL se puede hacer, pero no es una sentencia sql en sí, tiene
-    su BEGIN y su END;
+/*
+    Se pueden usar más de una variable, contando con que el paso de variables es posicional.
+    El nombre de las variables es indiferente, y se pueden repetir.
+    Las variables que son sobre la estructura de las tablas hay que concatenarlas en la cadena
+    de dsbl, no pueden pasarse como variable.
 */
 
     EXECUTE IMMEDIATE dsbl_peticionsql INTO v_existe
-    USING   p_ciudad, v_prueba;
+    USING   p_ciudad;
 
     RETURN  v_existe;
 END ComprobarCiudad;

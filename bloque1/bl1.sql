@@ -200,7 +200,7 @@ IS
         AND     TO_CHAR(v.fechahorasalida,'D') = TO_CHAR(v_fechaformateada, 'D');
 BEGIN
     
-    v_fechaFORmateada := ConvertirFecha(p_fechasalida);
+    v_fechaformateada := ConvertirFecha(p_fechasalida);
     FOR v_viajes in c_viajes LOOP
         IF c_viajes%FOUND THEN
             IF c_viajes%ROWCOUNT = 1 THEN

@@ -145,8 +145,6 @@ BEGIN
 END ComprobarRuta;
 /
 
-
-
 CREATE or REPLACE FUNCTION ConvertirFecha (p_fecha VARCHAR2)
 RETURN DATE
 IS
@@ -199,20 +197,25 @@ IS
         AND     r.destino = p_destino
         AND     TO_CHAR(v.fechahorasalida,'D') = TO_CHAR(v_fechaformateada, 'D');
 BEGIN
-    
     v_fechaformateada := ConvertirFecha(p_fechasalida);
+    v_numrutas := ComprobarRuta(p_origen, p_destino);
+    if v_numrutas = 0 then
+        RAISE_APPLICATION_ERROR (-20002, 'No existe esa ruta');
+    end if;
+    open c_viajes;
+    fetch c_viajes into v_check;
+    if not c_viajes%FOUND then
+        RAISE_APPLICATION_ERROR (-20003, 'No hay viajes ese dia');
+    end if;
+    close c_viajes;
     FOR v_viajes in c_viajes LOOP
-        IF c_viajes%FOUND THEN
-            IF c_viajes%ROWCOUNT = 1 THEN
-                DBMS_OUTPUT.put_line('Cabecera');
-            END IF;
-            DBMS_OUTPUT.put_line(   v_viajes.disponibles || ' ' ||
-                                    v_viajes.salida || ' ' || 
-                                    v_viajes.llegada || ' ' ||
-                                    v_viajes.precio_billete);
-        ELSE
-            DBMS_OUTPUT.put_line('No hay viajes');
+        IF c_viajes%ROWCOUNT = 1 THEN
+            DBMS_OUTPUT.put_line('Cabecera');
         END IF;
+        DBMS_OUTPUT.put_line(   v_viajes.disponibles || ' ' ||
+                                v_viajes.salida || ' ' || 
+                                v_viajes.llegada || ' ' ||
+                                v_viajes.precio_billete);
     END LOOP;
 END MostrarRuta;
 /

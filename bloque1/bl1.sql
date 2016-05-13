@@ -132,52 +132,56 @@ Nota: Se considera fundamental la división adecuada en subprogramas cuando resu
 legibilidad del código, así como la minimización del número de consultas realizadas al servidor.
 */
 CREATE or REPLACE FUNCTION ComprobarRuta (p_origen rutas.origen%type, p_destino rutas.destino%type)
-return NUMBER
-is
-    -- v_cantidad NUMBER;
-begin
-    return select count(*) as cantidad into v_cantidad
-    from rutas
-    where lower(origen) = lower(p_origen)
-    and lower(destino) = lower(p_destino);
-    -- return v_cantidad
-end ComprobarRuta;
+RETURN NUMBER
+IS
+    v_cantidad NUMBER;
+BEGIN
+    SELECT COUNT(*) AS cantidad INTO v_cantidad
+    FROM rutas
+    WHERE LOWER(origen) = LOWER(p_origen)
+    AND LOWER(destino) = LOWER(p_destino);
+
+    RETURN v_cantidad;
+END ComprobarRuta;
+/
+
+
 
 CREATE or REPLACE FUNCTION ConvertirFecha (p_fecha VARCHAR2)
-return DATE
-is
+RETURN DATE
+IS
     v_fecha DATE;
-    v_formato varchar2(20);
+    v_formato VARCHAR2(20);
     /*
         e_formato_fecha_invalido exception;
         pragma exception_init(e_formato_fecha_invalido, -20001);
     */
-begin
-    case
-        when regexp_like (p_fecha, '\d{1,2}/\d{1,2}/\d{2}') then
+BEGIN
+    CASE
+        WHEN regexp_like (p_fecha, '\d{1,2}/\d{1,2}/\d{2}') THEN
             v_formato := 'DD/MM/YY';
-        when regexp_like (p_fecha, '\d{1,2}/\d{1,2}/\d{4}') then
+        WHEN regexp_like (p_fecha, '\d{1,2}/\d{1,2}/\d{4}') THEN
             v_formato := 'DD/MM/YYYY';
-        when regexp_like (p_fecha, '\d{1,2}-\d{1,2}-\d{4}') then
+        WHEN regexp_like (p_fecha, '\d{1,2}-\d{1,2}-\d{4}') THEN
             v_formato := 'DD-MM-YYYY';
-        when regexp_like (p_fecha, '\d{1,2}-\d{1,2}-\d{2}') then
+        WHEN regexp_like (p_fecha, '\d{1,2}-\d{1,2}-\d{2}') THEN
             v_formato := 'DD-MM-YY';
-        else
-            raise_application_error (-20001, 'Formato de fecha incorrecto');
-        end case;
+        ELSE
+            RAISE_APPLICATION_ERROR (-20001, 'Formato de fecha incorrecto');
+        END CASE;
     v_fecha := to_date(p_fecha, v_formato);
-    return v_fecha;
+    RETURN v_fecha;
 /*
 exception
     when e_formato_fecha_invalido then
         DBMS_OUTPUT.put_line('Fecha introducida incorrecta.');
 */
-end ConvertirFecha;
+END ConvertirFecha;
 /
 
 CREATE OR REPLACE PROCEDURE MostrarRuta (p_origen rutas.origen%TYPE, p_destino rutas.destino%TYPE, p_fechasalida VARCHAR2)
 IS
-   v_fechaformateada date;
+   v_fechaformateada DATE;
    CURSOR c_viajes
    IS
         SELECT  m.numeroasientos - v.numbilletesvendidos AS disponibles,
@@ -193,22 +197,22 @@ IS
         AND     a.codmodelo = m.codigo
         AND     r.origen = p_origen
         AND     r.destino = p_destino
-        AND     to_char(v.fechahorasalida,'D') = to_char(v_fechaformateada, 'D');
+        AND     TO_CHAR(v.fechahorasalida,'D') = TO_CHAR(v_fechaformateada, 'D');
 BEGIN
     
-    v_fechaformateada := ConvertirFecha(p_fechasalida);
-    for v_viajes in c_viajes LOOP
-        if c_viajes%FOUND then
-            if c_viajes%ROWCOUNT = 1 then
+    v_fechaFORmateada := ConvertirFecha(p_fechasalida);
+    FOR v_viajes in c_viajes LOOP
+        IF c_viajes%FOUND THEN
+            IF c_viajes%ROWCOUNT = 1 THEN
                 DBMS_OUTPUT.put_line('Cabecera');
-            end if;
+            END IF;
             DBMS_OUTPUT.put_line(   v_viajes.disponibles || ' ' ||
                                     v_viajes.salida || ' ' || 
                                     v_viajes.llegada || ' ' ||
                                     v_viajes.precio_billete);
-        else
+        ELSE
             DBMS_OUTPUT.put_line('No hay viajes');
-        end if;
+        END IF;
     END LOOP;
 END MostrarRuta;
 /

@@ -137,29 +137,36 @@ return DATE
 is
     v_fecha DATE;
     v_formato varchar2(20);
-    pragma_exception_init(formato_fecha_invalido, -20001);
+    /*
+        e_formato_fecha_invalido exception;
+        pragma exception_init(e_formato_fecha_invalido, -20001);
+    */
 begin
     case
         when regexp_like (p_fecha, '\d{1,2}/\d{1,2}/\d{2}') then
-            v_formato = 'DD/MM/YY';
+            v_formato := 'DD/MM/YY';
         when regexp_like (p_fecha, '\d{1,2}/\d{1,2}/\d{4}') then
-            v_formato = 'DD/MM/YYYY';
+            v_formato := 'DD/MM/YYYY';
         when regexp_like (p_fecha, '\d{1,2}-\d{1,2}-\d{4}') then
-            v_formato = 'DD-MM-YYYY';
+            v_formato := 'DD-MM-YYYY';
         when regexp_like (p_fecha, '\d{1,2}-\d{1,2}-\d{2}') then
-            v_formato = 'DD-MM-YY';
+            v_formato := 'DD-MM-YY';
         else
-            raise formato_fecha_invalido;
+            raise_application_error (-20001, 'Formato de fecha incorrecto');
         end case;
-    to_date(p_fecha, v_formato);
+    v_fecha := to_date(p_fecha, v_formato);
     return v_fecha;
+/*
 exception
-    when formato_fecha_invalido then
-        DBMS_OUTPUT.put_line('Fecha introducida incorrecta.')
+    when e_formato_fecha_invalido then
+        DBMS_OUTPUT.put_line('Fecha introducida incorrecta.');
+*/
 end ConvertirFecha;
+/
 
 CREATE OR REPLACE PROCEDURE MostrarRuta (p_origen rutas.origen%TYPE, p_destino rutas.destino%TYPE, p_fechasalida VARCHAR2)
 IS
+   v_fechaformateada date;
    CURSOR
    IS
         SELECT  m.numeroasientos - v.numbilletesvendidos AS disponibles,
@@ -173,15 +180,12 @@ IS
         WHERE   v.codruta = r.codigo
         AND     v.matricula = a.matricula
         AND     a.codmodelo = m.codigo
-        AND     r.origen = 'Sevilla'
-        AND     r.destino = 'Madrid'
-        AND     to_char(v.fechahorasalida,'D') = v_fechaformateada;
-    
-    v_fechaformateada date;
+        AND     r.origen = p_origen
+        AND     r.destino = p_destino
+        AND     to_char(v.fechahorasalida,'D') = to_char(v_fechaformateada, 'D');
 BEGIN
     v_fechaformateada := ConvertirFecha(p_fechasalida);
-exceptions
-    when
+    
 END MostrarRuta;
 /
 

@@ -132,7 +132,33 @@ Nota: Se considera fundamental la división adecuada en subprogramas cuando resu
 legibilidad del código, así como la minimización del número de consultas realizadas al servidor.
 */
 
-CREATE OR REPLACE PROCEDURE MostrarRuta (p_origen rutas.origen%TYPE, p_destino rutas.destino%TYPE, p_fechasalida date)
+CREATE or REPLACE FUNCTION ConvertirFecha (p_fecha VARCHAR2)
+return DATE
+is
+    v_fecha DATE;
+    v_formato varchar2(20);
+    pragma_exception_init(formato_fecha_invalido, -20001);
+begin
+    case
+        when regexp_like (p_fecha, '\d{1,2}/\d{1,2}/\d{2}') then
+            v_formato = 'DD/MM/YY';
+        when regexp_like (p_fecha, '\d{1,2}/\d{1,2}/\d{4}') then
+            v_formato = 'DD/MM/YYYY';
+        when regexp_like (p_fecha, '\d{1,2}-\d{1,2}-\d{4}') then
+            v_formato = 'DD-MM-YYYY';
+        when regexp_like (p_fecha, '\d{1,2}-\d{1,2}-\d{2}') then
+            v_formato = 'DD-MM-YY';
+        else
+            raise formato_fecha_invalido;
+        end case;
+    to_date(p_fecha, v_formato);
+    return v_fecha;
+exception
+    when formato_fecha_invalido then
+        DBMS_OUTPUT.put_line('Fecha introducida incorrecta.')
+end ConvertirFecha;
+
+CREATE OR REPLACE PROCEDURE MostrarRuta (p_origen rutas.origen%TYPE, p_destino rutas.destino%TYPE, p_fechasalida VARCHAR2)
 IS
    CURSOR
    IS
@@ -147,8 +173,15 @@ IS
         WHERE   v.codruta = r.codigo
         AND     v.matricula = a.matricula
         AND     a.codmodelo = m.codigo
-        AND     r.origen = 'Sevilla';
+        AND     r.origen = 'Sevilla'
+        AND     r.destino = 'Madrid'
+        AND     to_char(v.fechahorasalida,'D') = v_fechaformateada;
+    
+    v_fechaformateada date;
 BEGIN
+    v_fechaformateada := ConvertirFecha(p_fechasalida);
+exceptions
+    when
 END MostrarRuta;
 /
 

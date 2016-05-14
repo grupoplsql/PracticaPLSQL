@@ -198,9 +198,8 @@ create or replace package PaqueteRutas as
     v_fechaformateada   date;
     v_destino           rutas.destino%TYPE;
     v_origen            rutas.origen%TYPE;
+
 -- Declaro el cursor para que sea visible desde fuera
-
-
     CURSOR c_viajes
     IS
         SELECT  m.numeroasientos - v.numbilletesvendidos AS disponibles,
@@ -245,7 +244,14 @@ create or replace package body PaqueteRutas as
     end MostrarPlazas;
 end PaqueteRutas;
 
-
+CREATE OR REPLACE PROCEDURE MostrarRuta
+is
+    fecha date;
+begin
+    fecha := to_date('10/5/2016','DD/MM/YYYY');
+    PaqueteRutas.MostrarPlazas ('Sevilla', 'Madrid', fecha);
+end;
+/
 -- Paquete Rutas hasta aqui
 
 CREATE OR REPLACE PROCEDURE MostrarRuta (p_origen rutas.origen%TYPE, p_destino rutas.destino%TYPE, p_fechasalida VARCHAR2)

@@ -244,7 +244,7 @@ create or replace package body PaqueteRutas as
     end MostrarPlazas;
 end PaqueteRutas;
 
-CREATE OR REPLACE PROCEDURE MostrarRuta
+CREATE OR REPLACE PROCEDURE Pruebas
 is
     fecha date;
 begin

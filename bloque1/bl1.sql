@@ -177,6 +177,61 @@ exception
 END ConvertirFecha;
 /
 
+-- Paquete desde aquí
+create or replace package PaqueteRutas as
+-- Aquí se define el tipo de columnas que tendrá la tabla
+    TYPE tRegDetalleRuta is RECORD
+    (
+        plazasDisponibles   number,
+        fechahorasalida     date,
+        fechahorallegada    date,
+        preciobillete       rutas.preciobillete%TYPE
+    );
+
+-- Aquí se define el tipo de registros que tendrá la tabla.
+    type tTablaRutas is table of tRegDetalleRuta
+    index by binary_integer;
+
+-- Aquí se declara la tabla
+    InfoRutas   tTablaRutas;
+
+    v_fechaformateada   date;
+    v_destino           rutas.destino%TYPE;
+    v_origen            rutas.origen%TYPE;
+-- Declaro el cursor para que sea visible desde fuera
+   CURSOR c_viajes
+   IS
+        SELECT  m.numeroasientos - v.numbilletesvendidos AS disponibles,
+                TO_CHAR(v.fechahorasalida, 'DD/MM/YYYY HH24:MI') AS salida,
+                TO_CHAR(v.fechahorasalida + r.duracionenminutos / 1440, 'DD/MM/YYYY HH24:MI') AS llegada,
+                r.preciobillete AS precio_billete
+        FROM    modelos m,
+                viajes v,
+                rutas r,
+                autobuses a
+        WHERE   v.codruta = r.codigo
+        AND     v.matricula = a.matricula
+        AND     a.codmodelo = m.codigo
+        AND     r.origen = v_origen
+        AND     r.destino = v_destino
+        AND     TO_CHAR(v.fechahorasalida,'D') = TO_CHAR(v_fechaformateada, 'D');
+
+-- MÉTODOS A PARTIR DE AQUÍ
+-- Declaro la función para que sea visible desde fuera        
+    PROCEDURE MostrarPlazas (p_origen rutas.origen%TYPE, p_destino rutas.destino%TYPE, p_fechasalida VARCHAR2);
+end PaqueteRutas;
+
+-- Metodos del paquete aqui
+create or replace package body PaqueteRutas as
+PROCEDURE MostrarPlazas (p_origen rutas.origen%TYPE, p_destino rutas.destino%TYPE, p_fechasalida VARCHAR2)
+is
+    -- ¿Aquí variables locales de la función?
+begin
+end MostrarPlazas;
+
+
+-- Paquete Rutas hasta aqui
+
 CREATE OR REPLACE PROCEDURE MostrarRuta (p_origen rutas.origen%TYPE, p_destino rutas.destino%TYPE, p_fechasalida VARCHAR2)
 IS
    v_fechaformateada DATE;
@@ -226,23 +281,18 @@ RETURN NUMBER
 IS
     v_existe NUMBER;
     dsbl_peticionsql VARCHAR2(500);
-
 BEGIN
-
     dsbl_peticionsql := 'SELECT COUNT(*) ' ||
                         'FROM rutas '      ||
                         'WHERE ' || p_tipo || ' = :a';
-
 /*
     Se pueden usar más de una variable, contando con que el paso de variables es posicional.
     El nombre de las variables es indiferente, y se pueden repetir.
     Las variables que son sobre la estructura de las tablas hay que concatenarlas en la cadena
     de dsbl, no pueden pasarse como variable.
 */
-
     EXECUTE IMMEDIATE dsbl_peticionsql INTO v_existe
     USING   p_ciudad;
-
     RETURN  v_existe;
 END ComprobarCiudad;
 /
@@ -263,8 +313,6 @@ BEGIN
         -- raise_exception_error();
         DBMS_OUTPUT.put_line('Error');
     END IF;
-
     -- MostrarRuta(p_origen, p_destino, p_fechasalida);
-    
 END ReservarViaje;
 /

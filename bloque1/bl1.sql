@@ -179,22 +179,6 @@ END ConvertirFecha;
 
 -- Paquete desde aquí
 create or replace package PaqueteRutas as
--- Aquí se define el tipo de columnas que tendrá la tabla
-    TYPE tRegDetalleRuta is RECORD
-    (
-        plazasDisponibles   number,
-        fechahorasalida     date,
-        fechahorallegada    date,
-        preciobillete       rutas.preciobillete%TYPE
-    );
-
--- Aquí se define el tipo de registros que tendrá la tabla.
-    type tTablaRutas is table of tRegDetalleRuta
-    index by binary_integer;
-
--- Aquí se declara la tabla
-    InfoRutas   tTablaRutas;
-
     v_fechaformateada   date;
     v_destino           rutas.destino%TYPE;
     v_origen            rutas.origen%TYPE;
